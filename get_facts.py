@@ -6,11 +6,15 @@ import difflib
 import sqlite3 as lite
 import time
 import keys
+import sys
 
 auth = tweepy.OAuthHandler(keys.consumer_key, keys.consumer_secret)
 auth.set_access_token(keys.access_token, keys.access_token_secret)
 api = tweepy.API(auth)
-con = lite.connect('/home/ubuntu/Wow_Facts_Daily/facts.db')
+if sys.platform == 'darwin':
+    con = lite.connect('/Users/Roy/Desktop/ubuntu/Wow_Facts_Daily/facts.db')
+else:
+    con = lite.connect('/home/ubuntu/Wow_Facts_Daily/facts.db')
 
 def similar(arg1, arg2):
     ratio = 0.8
