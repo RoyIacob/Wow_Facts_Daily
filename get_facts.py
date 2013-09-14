@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import tweepy
+
+
 import datetime
 import praw
 import difflib
