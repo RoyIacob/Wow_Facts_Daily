@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import tweepy
-
-
 import datetime
 import praw
 import difflib
@@ -26,19 +24,20 @@ def get_existing_facts():
     with con:
         cur = con.cursor()
         cur.execute('SELECT Fact FROM Facts')
-        tweets = [row[0] for row in cur.fetchall() if len(row[0]) < 141] #TODO remove facts that are too long
+        tweets = [row[0] for row in cur.fetchall() if len(row[0]) < 141] 
         return tweets
 
 def get_long_facts():
     with con:
         cur = con.cursor()
         cur.execute('SELECT Fact FROM Facts')
-        tweets = [row[0] for row in cur.fetchall() if len(row[0]) > 140] #TODO remove facts that are too long
+        tweets = [row[0] for row in cur.fetchall() if len(row[0]) > 140] 
         return tweets
 
 def get_tweets(user):
-    timeline = api.user_timeline(user)
-    tweets = [t.text for t in timeline if '@' not in t.text and 'bit.ly' not in t.text and 'http' not in t.text and '#' not in t.text and len(t.text) < 141 ]
+    invalid_terms = ['@','bit.ly','http','#']
+    timeline = [t.text for t in api.user_timeline(user)]
+    tweets = filter(lambda s: len(s) < 141 and not any(term in s for term in invalid_terms), timeline)
     return tweets
 
 def save_facts(facts):
