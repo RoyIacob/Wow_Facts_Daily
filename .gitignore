@@ -1,4 +1,5 @@
 *.pyc
+facts.db
 favorite.py
 log.twitter
 keys.py
