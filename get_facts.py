@@ -10,7 +10,7 @@ import keys
 auth = tweepy.OAuthHandler(keys.consumer_key, keys.consumer_secret)
 auth.set_access_token(keys.access_token, keys.access_token_secret)
 api = tweepy.API(auth)
-con = lite.connect('/home/ubuntu/twitter/facts.db')
+con = lite.connect('/home/ubuntu/Wow_Facts_Daily/facts.db')
 
 def similar(arg1, arg2):
     ratio = 0.8
@@ -32,7 +32,7 @@ def get_long_facts():
 
 def get_tweets(user):
     timeline = api.user_timeline(user)
-    tweets = [ t.text for t in timeline if '@' not in t.text and 'bit.ly' not in t.text and 'http' not in t.text and '#' not in t.text and len(t.text) < 141 ]
+    tweets = [t.text for t in timeline if '@' not in t.text and 'bit.ly' not in t.text and 'http' not in t.text and '#' not in t.text and len(t.text) < 141 ]
     return tweets
 
 def save_facts(facts):
@@ -66,74 +66,6 @@ def tweet():
                     time.sleep(940)
                     tweet()
 
-def get_users():
-    with con:
-        cur = con.cursor()
-        cur.execute("SELECT COUNT(*) FROM friends")
-        num_friends = cur.fetchall()[0][0]
-        print 'current userbase',num_friends
-        cur.execute("SELECT COUNT(*) FROM friends WHERE favorited IS NOT NULL")
-        total_favorited = cur.fetchall()[0][0]
-        if total_favorited > num_friends / 2:
-            #cur.execute("CREATE TABLE IF NOT EXISTS friends(id INT, favorited INT, lurked TEXT)")
-            cur.execute("SELECT id FROM friends WHERE lurked IS NULL ORDER BY RANDOM() LIMIT 1")
-            base = cur.fetchall()[0][0]
-            friends = api.friends_ids(base)
-            cur.execute("UPDATE friends SET lurked=1 WHERE id='%s'" % base)
-            for f in friends:
-                cur.execute("SELECT id FROM friends WHERE id = '%s'" % f)
-                if cur.fetchall() == []:
-                    cur.execute("INSERT INTO friends('id') VALUES('%s')" % f)
-
-def favorite():
-    with con:
-        cur = con.cursor()
-        cur.execute("SELECT id FROM friends WHERE favorited IS NULL ORDER BY RANDOM() LIMIT 100")
-        users = [f[0] for f in cur.fetchall()]
-        count = 0
-        liked = []
-        for u in users:
-            success = False
-            #print 'favoriting',api.get_user(u).screen_name
-            while success == False:
-                try:
-                    api.get_user(u).status.favorite()
-                    liked.append(u)
-                    count += 1
-                    print 'faved'
-                    success = True
-                except Exception,e:
-                    print 'error on',u,e
-                    if str(e) == "[{'message': 'You have already favorited this status', 'code': 139}]":
-                        print 'setting faved...'
-                        cur.execute("UPDATE friends SET favorited=1 WHERE id='%s'" % u)
-                        success = True
-                    elif str(e) == "'User' object has no attribute 'status'":
-                        print 'deleting^^^'
-                        try:
-                            cur.execute("DELETE FROM friends WHERE id='%s'" % u )
-                            success = True
-                        except Exception,e:
-                            time.sleep(10)
-                            cur.execute("DELETE FROM friends WHERE id='%s'" % u )
-
-                    elif str(e) == "[{'message': 'Rate limit exceeded', 'code': 88}]":
-                        print 'rate exceeded,sleeping 15'
-                        time.sleep(300)
-                        print '10min'
-                        time.sleep(300)
-                        print '5 min remaining'
-                        time.sleep(330)
-                        print 'trying again'
-                        break
-        print 'favorited',count
-        for i in liked:
-            cur.execute("UPDATE friends SET favorited=1 WHERE id='%s'" % i)
-        cur.execute("SELECT COUNT(*) FROM friends WHERE favorited IS NOT NULL")
-        print 'total favorited',cur.fetchall()[0][0]
-        cur.execute("SELECT COUNT(*) FROM friends")
-        print 'total friends',cur.fetchall()[0][0]
-
 if __name__ == '__main__':
     print 'started at:',datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     print 'tweeting'
@@ -155,9 +87,4 @@ if __name__ == '__main__':
         found = False
     save_facts(add_facts)
     print 'appending',len(add_facts),'facts, done.'
-#get_users()
-#favorite()
-
-
-
 
